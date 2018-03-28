@@ -1,0 +1,38 @@
+{% extends "bootstrap/base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block title %}
+Sign Up
+{% endblock %}
+
+{% block styles %}
+{{super()}}
+<link rel="stylesheet" href="{{url_for('.static', filename='signin.css')}}">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+
+  <form class="form-signin" method="POST" action="/mapinsert">
+    <h2 class="form-signin-heading">Connect</h2>
+    <!--
+    {{ form.hidden_tag() }}
+    {{ wtf.form_field(form.device) }}
+    {{ wtf.form_field(form.dept) }}
+    {{ wtf.form_field(form.bed) }}
+
+-->
+
+
+{% for field in form %}
+    <tr>
+        <th>{{ field.label }}</th>
+        <td>{{ field }}</td>
+    </tr>
+{% endfor %}
+
+    <button class="btn btn-lg btn-primary btn-block" type="submit">Connect</button>
+  </form>
+
+</div> <!-- /container -->
+{% endblock %}

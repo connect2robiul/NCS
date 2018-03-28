@@ -1,0 +1,548 @@
+{% extends 'master2.html' %}
+{% block content %}
+<html>
+<head> 
+<link rel="stylesheet" href="../../static/new/bootstrap.min.css">
+  <script src="../../static/new/jquery.min.js"></script>
+  <script src="../../static/new/bootstrap.min.js"></script>
+    <link href="/static/user_form.css" rel="stylesheet">
+	
+   <link rel="stylesheet" href="../../static/new/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
+   
+   <script src="../../static/new/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous"></script>
+   <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!--Database record-->
+    <link rel="stylesheet" href="../../static/new/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+   <!-- Optional theme -->
+   <link rel="stylesheet" href="../../static/new/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
+
+   <script src="../../static/new/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous"></script>
+   <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Admin Panel</title>
+<link href="../../static/new/jquerysctipttop.css" rel="stylesheet" type="text/css">
+<link href="/static/jquery.atAccordionOrTabs.css" rel="stylesheet" type="text/css">
+        <script type="text/javascript" src="../../static/new/socket.io.min.js"></script>
+    <script src="../../static/new/jquery.min.js"></script>
+
+			<audio  preload="auto" id="myAudio"><source src="../../static/audio/calling.mp3" type="audio/mp3" ></audio>
+			
+			<audio preload="auto" id="emyAudio"><source src="../../static/audio/emergency.mp3" type="audio/mp3"></audio>
+			<audio preload="auto" id="bluemyAudio"><source src="../../static/audio/bluecode.mp3" type="audio/mp3"></audio>
+			
+			<meta id="my_session" data="{{session['topic_login']}}" >
+	
+      <script type="text/javascript" charset="utf-8">
+	  
+	
+function star_time()
+{
+var timer = document.getElementById("my_timwer").innerHTML ; 
+var arr = timer.split(":");
+var hour = arr[0];
+var min = arr[1];
+var sec = arr[2];
+if (sec == 59) {
+if(min==59){
+hour++;
+min = 0;
+if (hour <10) hour = "0"+ hour ; 
+}
+else {min++;}
+if(min<10) min = "0" + min ;
+sec = 0;}
+else {
+sec++;
+if(sec <10) sec = "0" + sec ;
+}
+
+document.getElementById("my_timwer").innerHTML = hour + ":" + min +":" + sec ;
+setTimeout(star_time,0);
+}
+	
+	  
+function formatItem(item) {
+		  if(item.message=="Calling"){
+		  return $('<td >' + item.device + '</td> <td> ' + item.message + ' </td><td>' + item.room + '</td><td>' +item.bed + '</td>').addClass('bad');
+		  }
+		  else if(item.message=="Emergency"){
+		  return $('<td >' + item.device + '</td> <td> ' + item.message + ' </td><td>' + item.room + '</td><td>' +item.bed + '</td>').addClass('selected');
+		  }
+		  else if(item.message=="Bluecode"){
+		  return $('<td >' + item.device + '</td> <td> ' + item.message + ' </td><td>' + item.room + '</td><td>' +item.bed + '</td>').addClass('bluecode');
+		  }
+                
+          }
+		  function checktable(item){
+     var table = $("table tbody");
+
+    table.find('tr').each(function (i) {
+        var $tds = $(this).find('td'),
+            device = $tds.eq(0).text(),
+            message = $tds.eq(1).text(),
+            room = $tds.eq(2).text();
+        // do something with productId, product, Quantity
+        /*alert('Row ' + (i + 1) + ':\nMessage: ' + message
+              + '\nRoom: ' + room
+              + '\nBed: ' + bed);*/
+        var $position=i;
+        var $x=item.device;
+
+        if(device==$x){
+            //var new_tr=$(this).find('tr');
+            //$(this).parent(i+1).replaceWith(new_tr);
+            //return $position;
+      //      alert($position);
+            var rows = $('tr', tbdata);
+            var t=rows.eq($position);
+            t.replaceWith(item);
+
+
+        }
+
+
+    });
+
+
+
+
+}
+
+function wait(ms){
+   var start = new Date().getTime();
+   var end = start;
+   while(end < start + ms) {
+     end = new Date().getTime();
+  }
+}  
+
+
+function javaplaymusic(item) {
+console.log(item);
+ if (item.message == "Presence" || item.message == "Clear" ) { 
+		document.getElementById("myAudio").pause(); 
+ document.getElementById("bluemyAudio").pause(); 
+ document.getElementById("emyAudio").pause(); 
+ }
+ else if (item.message == "Bluecode") { document.getElementById('bluemyAudio').play();}
+
+ else if(item.message=="Calling"){ document.getElementById('myAudio').play();}
+ else if (item.message == "Emergency") {document.getElementById('emyAudio').play();}
+
+}
+
+
+
+
+
+var socket = io.connect('http://' + document.domain + ':' + location.port);
+var topic = '' ; 
+            socket.on('connect', function() {
+                 console.log('connected');
+            });
+			socket.on('topic_all', function(topicALL)
+			{
+			topic = topicALL
+			//console.log(topicALL); 
+			});
+            socket.on('admin', function(data)
+		{
+		
+		var sess = "{{ session['topic_login']}}" ; 
+		if (sess.replace(/\s/g, '') === topic.replace(/\s/g, ''))
+		{
+		console.log('running');
+              $.each(data, function (key, item) {
+			  
+			
+			
+        javaplaymusic(item);
+		
+		
+		
+         var $t=checktable(item);
+                    $('<tr>', { html: formatItem(item) }).appendTo($("#tbdata"));
+                         });
+						 }
+						 
+		//console.log(data,topic);
+		});
+			
+
+           
+			
+      </script>
+    <link href="/static/style1.css" rel="stylesheet" />
+	
+<!--Map Stylesheets-->
+ <link rel="stylesheet" href="../../static/new/bootstrap.min.css">
+  <script src="../../static/new/jquery.min.js"></script>
+
+    <link href="/static/user_form.css" rel="stylesheet">
+	
+</head>
+
+<body  onload="document.body.classList.add('loaded')">
+
+<h2 style="margin:50px auto 30px auto; text-align:center; color:White;" >{{ session['topic_login']}} Dashboard</h2>
+<ul class="demo">
+  <li><a>Realtime Data</a>
+  <!-- {{ session['topic_login']}}-->
+  
+  
+ <section>
+        <div class="tablecontent">
+                <table class="table table-hover table-bordered " id="tbdata">
+				<tbody>
+                   <tr class="tablehead">
+                     <th>Device</th>
+                     <th>Message</th>
+					 <th>Room</th>
+					   <th>Bed</th>
+					   
+                   </tr>
+				   </tbody>
+                </table>
+              </div>
+    </section>
+  </li>
+  
+  
+  {% if session['view'] == 'ADMIN' :%}
+  <li><a>Database Record</a> 
+    <section>
+	<div class="tablecontent">
+     <table class="table table-hover table-bordered">
+     <tr class="tablehead"><th>ID</th>
+	
+     <th>Device</th>
+     <th>Message</th>
+     <th>Date</th>
+     <th>Time</th>
+     <th>Bed</tr>
+     {% for entry in readings %}
+        <tr><td>{{ entry.id }}</td>
+        <td>{{ entry.device }}</td>
+        <td>{{ entry.message }}</td>
+        <td>{{ entry.currentdate }}</td>
+        <td>{{ entry.currentime }}</td>
+        <td>{{ entry.bed }}</td></tr>
+     {% endfor %}
+   </table>
+   </div>
+     </section>
+  </li>
+  <li><a>Device Mapping</a>
+    <section>
+<form class="form-style-9" action="{{ url_for('map') }}" id="form" method="post" name="form">
+<li>
+    <div class="form-group">
+        <label>Device</label>
+      <select class="form-control" id="sel1" name="device" required onmousedown="if(this.options.length>3){this.size=3;}" onchange="this.blur()"  onblur="this.size=0;">
+          <option></option>
+        <option value="CO01">CO01</option>
+        <option value="CO02">CO02</option>
+          <option value="CO03">CO03</option>
+          <option value="CO04">CO04</option>
+          <option value="CO05">CO05</option>
+          <option value="CO06">CO06</option>
+          <option value="CO07">CO07</option>
+          <option value="CO08">CO08</option>
+          <option value="CO09">CO09</option>
+          <option value="CO10">CO10</option>
+          <option value="CO11">CO11</option>
+          <option value="CO12">CO12</option>
+          <option value="CO13">CO13</option>
+          <option value="CO14">CO14</option>
+          <option value="CO15">CO15</option>
+          <option value="CO16">CO16</option>
+          <option value="CO17">CO17</option>
+          <option value="CO18">CO18</option>
+          <option value="CO19">CO19</option>
+          <option value="CO20">CO20</option>
+          <option value="CO21">CO21</option>
+          <option value="CO22">CO22</option>
+           <option value="CO23">CO23</option>
+           <option value="CO24">CO24</option>
+           <option value="CO25">CO25</option>
+           <option value="CO26">CO26</option>
+           <option value="CO27">CO27</option>
+           <option value="CO28">CO28</option>
+           <option value="CO29">CO29</option>
+           <option value="CO30">CO30</option>
+           <option value="CO31">CO31</option>
+           <option value="CO32">CO32</option>
+           <option value="CO33">CO33</option>
+           <option value="CO34">CO34</option>
+           <option value="CO35">CO35</option>
+           <option value="CO36">CO36</option>
+           <option value="CO37">CO37</option>
+           <option value="CO38">CO38</option>
+           <option value="CO39">CO39</option>
+           <option value="CO40">CO40</option>
+           <option value="CO41">CO41</option>
+           <option value="CO42">CO42</option>
+           <option value="CO43">CO43</option>
+           <option value="CO44">CO44</option>
+           <option value="CO45">CO45</option>
+           <option value="CO46">CO46</option>
+           <option value="CO47">CO47</option>
+           <option value="CO48">CO48</option>
+          <option value="CO49">CO49</option>
+          <option value="CO50">CO50</option>
+          <option value="CO51">CO51</option>
+          <option value="CO52">CO52</option>
+          <option value="CO53">CO53</option>
+          <option value="CO54">CO54</option>
+          <option value="CO55">CO55</option>
+          <option value="CO56">CO56</option>
+          <option value="CO57">CO57</option>
+          <option value="CO58">CO58</option>
+          <option value="CO59">CO59</option>
+          <option value="CO60">CO60</option>
+          <option value="CO61">CO61</option>
+          <option value="CO62">CO62</option>
+          <option value="CO63">CO63</option>
+          <option value="CO64">CO64</option>
+          <option value="CO65">CO65</option>
+          <option value="CO66">CO66</option>
+          <option value="CO67">CO67</option>
+          <option value="CO68">CO68</option>
+          <option value="CO69">CO69</option>
+          <option value="CO70">CO70</option>
+           <option value="CO71">CO71</option>
+           <option value="CO72">CO72</option>
+           <option value="CO73">CO73</option>
+           <option value="CO74">CO74</option>
+           <option value="CO75">CO75</option>
+           <option value="CO76">CO76</option>
+           <option value="CO77">CO77</option>
+           <option value="CO70">CO70</option>
+      </select>
+        <label>Department</label>
+         <select class="form-control" id="department" name="department" required onmousedown="if(this.options.length>=3){this.size=3;}" onchange="this.blur()"  onblur="this.size=0;">
+             <option></option>
+             <option value="crv">CRV</option>
+             <option value="clz">CLZ</option>
+             <option value="fwd">FWD</option>
+             <option value="mwd">MWD</option>
+             <option value="cab">CAB</option>
+             <option value="dng">DNG</option>
+             <option value="dps">DPS</option>
+             <option value="dcu">DCU</option>
+             <option value="ccu">CCU</option>
+         </select>
+        <label>Bed</label>
+        <select class="form-control" id="department" name="bed" required onmousedown="if(this.options.length>=3){this.size=3;}" onchange="this.blur()"  onblur="this.size=0;">
+            <option value=""></option>
+            <option value="01">01</option>
+            <option value="02">02</option>
+            <option value="03">03</option>
+            <option value="04">04</option>
+            <option value="05">05</option>
+            <option value="06">06</option>
+            <option value="07">07</option>
+            <option value="08">08</option>
+            <option value="09">09</option>
+            <option value="10">10</option>
+            <option value="11">11</option>
+            <option value="12">12</option>
+            <option value="13">13</option>
+        </select>
+        <br><br>
+        <div>
+				   <input class="btn btn-default" name="submit" type="submit" id="button2" value="Connect" onsubmit="alert('Connected');"/>
+                     <input class="btn btn-default" name="submit" type="submit" id="button2" value="Update" onsubmit="alert('Updated');"/>
+				</div>
+    </div>
+
+
+</li>
+
+</form>
+    </section>
+  </li>
+  <li><a>Report</a>
+    <section>
+         <img class="my_image" src="/static/under_construction.png" >
+    </section>
+  </li>
+  <li><a>ADD USER</a>
+    <section>
+      <form class="form-style-9" action="{{ url_for('addUser') }}" id="form" method="post" name="form" onsubmit="alert('User has been added');">
+<ul>
+<li>
+    <input type="text" id="name" name="name" required class="field-style field-full align-none" style="width:370px; height:42px;" placeholder="Username" value="{{
+          request.form.name }}"/><br><br>
+    <input type="email" id="email" name="email" required class="field-style field-full align-none" style="width:370px; height:42px;" placeholder="Email" value="{{
+          request.form.email}}"/><br><br>
+     <input type="text" id="password" name="password" required class="field-style field-full align-none" style="width:370px; height:42px;" placeholder="Password" value="{{
+          request.form.password}}"/><br>
+</li>
+<li>
+    <div class="form-group">
+      <select class="form-control" id="sel1" name="user_type" required style="width:370px; height:42px;" >
+		  <option value="" disabled selected>Select your option</option>
+        <option value="ADMIN">ADMIN</option>
+        <option value="NORMAL">NORMAL</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <select class="form-control" id="sel1" name="dep" required style="width:370px; height:42px;" >
+          <option value="" disabled selected>Select your option</option>
+        <option value="icu">ICU</option>
+        <option value="ccu">CCU</option>
+		<option value="cab">CAB</option>
+		<option value="clz">CLZ</option>
+		<option value="crv">CRV</option>
+		<option value="dcu">DCU</option>
+		<option value="dng">DNG</option>
+		<option value="dps">DPS</option>
+		<option value="fwd">DWD</option>
+		<option value="mwd">MWD</option>
+      </select>
+    </div>
+</li>
+
+<li>
+<input type="submit" value="Add User" />
+</li>
+</ul>
+</form>
+    </section>
+  </li>
+<li><a>Delete User</a>
+    <section>
+         <form class="form-style-9" action="{{ url_for('delete') }}" id="form" method="post" name="form" onsubmit="alert('Form Submitted');">
+<ul>
+<li>
+    <input type="text" id="user_name" name="user_name" required class="field-style field-full align-none" style="width:370px; height:42px;" placeholder="Username" value="{{
+          request.form.user_name }}"/><br><br>
+</li>
+<li>
+<input type="submit" value="Delete User" />
+</li>
+</ul>
+{% if messages %}
+      <script> $(function(){ window.location.hash = "tabset_0=6"; }); </script>
+      <p><strong>Message:</strong> {{ messages }}
+      {% endif %}
+	  
+</form>
+    </section>
+  </li>
+<li><a>Update User</a>
+    <section>
+           <form class="form-style-9" action="{{ url_for('update') }}" id="form" method="post" name="form" onsubmit="alert('Form Submitted');">
+<ul>
+<li>
+    <input type="text" id="user_name" name="user_name" required class="field-style field-full align-none" style="width:370px; height:42px;" placeholder="Username" value="{{
+          request.form.user_name }}"/><br><br>
+</li>
+<li>
+ <div class="form-group">
+      <select class="form-control" id="sel1" name="dep" required style="width:370px; height:42px;" >
+          <option value="" disabled selected>Select your option</option>
+        <option value="icu">ICU</option>
+        <option value="ccu">CCU</option>
+		<option value="cab">CAB</option>
+		<option value="clz">CLZ</option>
+		<option value="crv">CRV</option>
+		<option value="dcu">DCU</option>
+		<option value="dng">DNG</option>
+		<option value="dps">DPS</option>
+		<option value="fwd">FWD</option>
+		<option value="mwd">MWD</option>
+		
+	
+		
+		
+
+
+
+
+
+
+
+
+      </select>
+    </div>
+
+</li>
+<li>
+<input type="submit" value="Update Dep" />
+</li>
+</ul>
+
+{% if response %}
+      <script> $(function(){ window.location.hash = "tabset_0=7"; }); </script>
+      <p><strong>Message:</strong> {{ response }}
+      {% endif %}
+</form>
+    </section>
+  </li>
+  
+<li><a>Log View</a>
+    <section>
+	
+	
+<script>
+  var socket = io('http://localhost');
+  socket.on('message', function (data) {
+    console.log(data);
+    socket.emit('my other event', { my: 'data' });
+  });
+</script>
+	
+    <table class="table table-hover">
+     <tr>
+     <th>Username</th>
+     <th>Login Time</th>
+     <th>Logout Time</th></tr>
+     {% for log in logs %}
+         <tr>
+        <td>{{ log.uname }}</td>
+        <td>{{ log.entry_time }}</td>
+        <td>{{ log.out_time }}</td>
+         </tr>
+     {% endfor %}
+   </table>
+    </section>
+</li>  
+
+</ul>
+</body>
+
+{% endif %}
+<script src="../../static/new/jquery-2.1.4.min.js"></script>
+<script src="/static/jquery.bbq.js"></script>
+<script src="/static/jquery.atAccordionOrTabs.js"></script>
+<script type="text/javascript">
+$('.demo').accordionortabs();
+</script>
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-36251023-1']);
+  _gaq.push(['_setDomainName', 'jqueryscript.net']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+
+
+
+
+</html>
+{% endblock %}
+
